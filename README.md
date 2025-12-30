@@ -350,8 +350,10 @@ NODE_ENV=production node src/server.js
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👥 Team
-- [Team Member 1](https://github.com/username1)
-- [Team Member 2](https://github.com/username2)
+- [Pranathi](https://github.com/username1)
+- [Sai teja](https://github.com/username2)
+- [Pavani](https://github.com/username1)
+- [Ruthvik](https://github.com/username2)
 
 ## 🙏 Acknowledgments
 - [Three.js](https://threejs.org/) for amazing 3D graphics
