@@ -282,7 +282,7 @@ export const updateBookingStatus = catchAsync(async (req, res, next) => {
   }
 
   booking.status = status;
-  
+
   // If cancelling, set cancellation reason if provided
   if (status === 'cancelled' && req.body.cancellationReason) {
     booking.cancellationReason = req.body.cancellationReason;

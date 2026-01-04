@@ -107,14 +107,14 @@ bookingSchema.pre(/^find/, function (next) {
 // Calculate end date based on trip duration
 bookingSchema.pre('save', async function (next) {
   if (!this.startDate || !this.trip) return next();
-  
+
   const trip = await this.model('Trip').findById(this.trip);
   if (!trip) return next();
-  
+
   const endDate = new Date(this.startDate);
   endDate.setDate(endDate.getDate() + trip.duration);
   this.endDate = endDate;
-  
+
   next();
 });
 

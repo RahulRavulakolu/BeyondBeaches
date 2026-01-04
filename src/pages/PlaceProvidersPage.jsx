@@ -9,7 +9,7 @@ const PlaceProvidersPage = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { getGuides, getAgencies, currentUser, createBookingRequest } = useApp()
-  
+
   const [selectedProviders, setSelectedProviders] = useState([])
   const [requestSent, setRequestSent] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -29,7 +29,7 @@ const PlaceProvidersPage = () => {
     },
     'calangute-beach': {
       name: 'Calangute Beach',
-      type: 'Beach', 
+      type: 'Beach',
       description: 'Queen of beaches, perfect for families and shopping',
       image: '🏄‍♂️',
       guides: [2, 6],
@@ -90,12 +90,12 @@ const PlaceProvidersPage = () => {
   const allAgencies = getAgencies()
 
   // Filter providers for this specific place
-  const availableGuides = allGuides.filter(guide => 
-    currentPlace?.guides.includes(guide.id) && 
+  const availableGuides = allGuides.filter(guide =>
+    currentPlace?.guides.includes(guide.id) &&
     (guide.availability?.includes(travelDate) || !travelDate)
   )
-  
-  const availableAgencies = allAgencies.filter(agency => 
+
+  const availableAgencies = allAgencies.filter(agency =>
     currentPlace?.agencies.includes(agency.id)
   )
 
@@ -130,7 +130,7 @@ const PlaceProvidersPage = () => {
 
     try {
       // Send requests to all selected providers
-      const requests = selectedProviders.map(provider => 
+      const requests = selectedProviders.map(provider =>
         createBookingRequest({
           providerId: provider.id,
           providerType: provider.type,
@@ -144,13 +144,13 @@ const PlaceProvidersPage = () => {
 
       // Wait for all requests to complete
       await Promise.all(requests);
-      
+
       setSuccess(true);
       setRequestSent(true);
-      
+
       // Reset success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
-      
+
     } catch (error) {
       console.error('Failed to send requests:', error);
       setError('Failed to send booking requests. Please try again.');
@@ -164,7 +164,7 @@ const PlaceProvidersPage = () => {
       <div className="min-h-screen pt-16 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Place Not Found</h2>
-          <button 
+          <button
             onClick={() => navigate('/destinations')}
             className="btn-primary"
           >
@@ -192,7 +192,7 @@ const PlaceProvidersPage = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Requests Sent!</h2>
           <p className="text-gray-600 mb-6">
-            Your requests have been sent to {selectedProviders.length} provider{selectedProviders.length > 1 ? 's' : ''}. 
+            Your requests have been sent to {selectedProviders.length} provider{selectedProviders.length > 1 ? 's' : ''}.
             You'll be notified when they respond.
           </p>
           <div className="space-y-3">
@@ -233,7 +233,7 @@ const PlaceProvidersPage = () => {
             {currentPlace.name}
           </h1>
           <p className="text-xl text-gray-600 mb-4">{currentPlace.description}</p>
-          
+
           {/* Trip Details */}
           <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
             <div className="flex items-center">
@@ -263,7 +263,7 @@ const PlaceProvidersPage = () => {
               <User className="w-6 h-6 mr-2" />
               Available Guides ({availableGuides.length})
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableGuides.map((guide, index) => (
                 <motion.div
@@ -272,10 +272,9 @@ const PlaceProvidersPage = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => handleProviderSelect(guide)}
-                  className={`bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
-                    selectedProviders.find(p => p.id === guide.id && p.type === 'guide') 
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 ${selectedProviders.find(p => p.id === guide.id && p.type === 'guide')
                       ? 'ring-4 ring-primary-500 shadow-2xl' : ''
-                  }`}
+                    }`}
                 >
                   {/* Guide Header */}
                   <div className="p-6">
@@ -346,7 +345,7 @@ const PlaceProvidersPage = () => {
               <Building className="w-6 h-6 mr-2" />
               Available Agencies ({availableAgencies.length})
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {availableAgencies.map((agency, index) => (
                 <motion.div
@@ -355,10 +354,9 @@ const PlaceProvidersPage = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => handleProviderSelect(agency)}
-                  className={`bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
-                    selectedProviders.find(p => p.id === agency.id && p.type === 'agency') 
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 ${selectedProviders.find(p => p.id === agency.id && p.type === 'agency')
                       ? 'ring-4 ring-primary-500 shadow-2xl' : ''
-                  }`}
+                    }`}
                 >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -475,11 +473,10 @@ const PlaceProvidersPage = () => {
             <button
               onClick={handleSendRequests}
               disabled={selectedProviders.length === 0 || loading}
-              className={`inline-flex items-center px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 ${
-                selectedProviders.length > 0 && !loading
+              className={`inline-flex items-center px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 ${selectedProviders.length > 0 && !loading
                   ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+                }`}
             >
               {loading ? (
                 <div className="flex items-center">

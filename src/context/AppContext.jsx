@@ -18,7 +18,7 @@ export const AppProvider = ({ children }) => {
   const [selectedDestination, setSelectedDestination] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Load user from localStorage on app start
+  // Load user and data from localStorage on app start
   useEffect(() => {
     const savedUser = localStorage.getItem('beyondbeaches_user')
     if (savedUser) {
@@ -27,6 +27,32 @@ export const AppProvider = ({ children }) => {
       setIsAuthenticated(true)
     }
   }, [])
+
+  // Helper to persist data
+  const persistData = (key, data) => {
+    localStorage.setItem(key, JSON.stringify(data));
+    // Trigger storage event for other tabs
+    window.dispatchEvent(new Event('storage'));
+  };
+
+  // Initialize data from local storage or defaults
+  const [dataState, setDataState] = useState({
+    bookings: JSON.parse(localStorage.getItem('beyondbeaches_bookings')) || bookings,
+    reviews: JSON.parse(localStorage.getItem('beyondbeaches_reviews')) || reviews
+  });
+
+  // Sync state across tabs
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setDataState({
+        bookings: JSON.parse(localStorage.getItem('beyondbeaches_bookings')) || bookings,
+        reviews: JSON.parse(localStorage.getItem('beyondbeaches_reviews')) || reviews
+      });
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Authentication functions
   const login = (email, password) => {
@@ -79,21 +105,21 @@ export const AppProvider = ({ children }) => {
     return new Promise((resolve) => {
       setTimeout(() => {
         let results = []
-        
+
         if (type === 'all' || type === 'guides') {
-          const locationGuides = guides.filter(guide => 
+          const locationGuides = guides.filter(guide =>
             guide.location.toLowerCase().includes(location.toLowerCase())
           )
           results = [...results, ...locationGuides]
         }
-        
+
         if (type === 'all' || type === 'agencies') {
-          const locationAgencies = agencies.filter(agency => 
+          const locationAgencies = agencies.filter(agency =>
             agency.location.toLowerCase().includes(location.toLowerCase())
           )
           results = [...results, ...locationAgencies]
         }
-        
+
         setSearchResults(results)
         setSelectedDestination(location)
         setLoading(false)
@@ -108,13 +134,17 @@ export const AppProvider = ({ children }) => {
     return new Promise((resolve) => {
       setTimeout(() => {
         const newBooking = {
-          id: bookings.length + 1,
+          id: dataState.bookings.length + 1,
           userId: currentUser.id,
           ...bookingData,
           status: 'pending',
           createdAt: new Date().toISOString().split('T')[0]
         }
-        bookings.push(newBooking)
+
+        const updatedBookings = [...dataState.bookings, newBooking];
+        setDataState(prev => ({ ...prev, bookings: updatedBookings }));
+        persistData('beyondbeaches_bookings', updatedBookings);
+
         setLoading(false)
         resolve(newBooking)
       }, 1000)
@@ -124,20 +154,9 @@ export const AppProvider = ({ children }) => {
   const createBookingRequest = async (requestData) => {
     setLoading(true);
     try {
-      // In a real app, you would make an API call here:
-      // const response = await fetch('/api/bookings', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     ...requestData,
-      //     userId: currentUser?.id
-      // })
-      // });
-      // const data = await response.json();
-      
       // Simulated API call with timeout
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       const newRequest = {
         id: Date.now(), // Use timestamp for unique ID
         userId: currentUser?.id,
@@ -147,13 +166,16 @@ export const AppProvider = ({ children }) => {
         escrowAmount: 0,
         escrowStatus: 'not_initiated'
       };
-      
-      // Add to local state
-      bookings.push(newRequest);
+
+      // Add to local state and persist
+      const updatedBookings = [...dataState.bookings, newRequest];
+      setDataState(prev => ({ ...prev, bookings: updatedBookings }));
+      persistData('beyondbeaches_bookings', updatedBookings);
+
       return newRequest;
     } catch (error) {
       console.error('Booking request failed:', error);
-      throw error; // Re-throw to handle in the component
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -162,21 +184,23 @@ export const AppProvider = ({ children }) => {
   const acceptBookingRequest = async (requestId) => {
     setLoading(true);
     try {
-      // In a real app, you would make an API call here:
-      // const response = await fetch(`/api/bookings/${requestId}/accept`, {
-      //   method: 'PATCH'
-      // });
-      // const data = await response.json();
-      
-      // Simulated API call with timeout
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const request = bookings.find(b => b.id === requestId);
-      if (request) {
-        request.status = 'accepted';
-        request.acceptedAt = new Date().toISOString();
-      }
-      return request;
+
+      const updatedBookings = dataState.bookings.map(b => {
+        if (b.id === requestId) {
+          return {
+            ...b,
+            status: 'accepted',
+            acceptedAt: new Date().toISOString()
+          };
+        }
+        return b;
+      });
+
+      setDataState(prev => ({ ...prev, bookings: updatedBookings }));
+      persistData('beyondbeaches_bookings', updatedBookings);
+
+      return updatedBookings.find(b => b.id === requestId);
     } catch (error) {
       console.error('Failed to accept booking:', error);
       throw error;
@@ -189,13 +213,23 @@ export const AppProvider = ({ children }) => {
     setLoading(true)
     return new Promise((resolve) => {
       setTimeout(() => {
-        const request = bookings.find(b => b.id === requestId)
-        if (request) {
-          request.escrowAmount = amount
-          request.escrowStatus = 'held'
-          request.status = 'payment_held'
-          request.escrowInitiatedAt = new Date().toISOString().split('T')[0]
-        }
+        const updatedBookings = dataState.bookings.map(b => {
+          if (b.id === requestId) {
+            return {
+              ...b,
+              escrowAmount: amount,
+              escrowStatus: 'held',
+              status: 'payment_held',
+              escrowInitiatedAt: new Date().toISOString().split('T')[0]
+            };
+          }
+          return b;
+        });
+
+        setDataState(prev => ({ ...prev, bookings: updatedBookings }));
+        persistData('beyondbeaches_bookings', updatedBookings);
+
+        const request = updatedBookings.find(b => b.id === requestId);
         setLoading(false)
         resolve(request)
       }, 1000)
@@ -206,26 +240,43 @@ export const AppProvider = ({ children }) => {
     setLoading(true)
     return new Promise((resolve) => {
       setTimeout(() => {
-        const request = bookings.find(b => b.id === requestId)
-        if (request) {
-          request.status = 'completed'
-          request.completedAt = new Date().toISOString().split('T')[0]
-          request.escrowStatus = 'released'
-          request.rating = rating
-          request.review = review
-          
-          // Add to reviews
-          const newReview = {
-            id: reviews.length + 1,
-            userId: currentUser.id,
-            providerId: request.providerId,
-            providerType: request.providerType,
-            rating,
-            comment: review,
-            date: new Date().toISOString().split('T')[0]
+        let request;
+        const updatedBookings = dataState.bookings.map(b => {
+          if (b.id === requestId) {
+            request = {
+              ...b,
+              status: 'completed',
+              completedAt: new Date().toISOString().split('T')[0],
+              escrowStatus: 'released',
+              rating,
+              review
+            };
+            return request;
           }
-          reviews.push(newReview)
+          return b;
+        });
+
+        // Add to reviews
+        const newReview = {
+          id: dataState.reviews.length + 1,
+          userId: currentUser.id,
+          providerId: request.providerId,
+          providerType: request.providerType,
+          rating,
+          comment: review,
+          date: new Date().toISOString().split('T')[0]
         }
+
+        const updatedReviews = [...dataState.reviews, newReview];
+
+        setDataState(prev => ({
+          bookings: updatedBookings,
+          reviews: updatedReviews
+        }));
+
+        persistData('beyondbeaches_bookings', updatedBookings);
+        persistData('beyondbeaches_reviews', updatedReviews);
+
         setLoading(false)
         resolve(request)
       }, 1000)
@@ -234,12 +285,12 @@ export const AppProvider = ({ children }) => {
 
   const getUserBookings = () => {
     if (!currentUser) return []
-    return bookings.filter(booking => booking.userId === currentUser.id)
+    return dataState.bookings.filter(booking => booking.userId === currentUser.id)
   }
 
   const getProviderBookings = () => {
     if (!currentUser) return []
-    return bookings.filter(booking => booking.providerId === currentUser.id)
+    return dataState.bookings.filter(booking => booking.providerId === currentUser.id)
   }
 
   // Get functions
@@ -262,20 +313,20 @@ export const AppProvider = ({ children }) => {
     searchResults,
     selectedDestination,
     loading,
-    
+
     // Data arrays
     agencies,
     guides,
     destinations,
-    
+
     // Auth functions
     login,
     signup,
     logout,
-    
+
     // Search functions
     searchProviders,
-    
+
     // Booking functions
     createBooking,
     createBookingRequest,
@@ -284,13 +335,13 @@ export const AppProvider = ({ children }) => {
     completeTrip,
     getUserBookings,
     getProviderBookings,
-    
+
     // Data functions
     getDestinations,
     getGuides,
     getAgencies,
     getProviderById,
-    
+
     // Setters
     setSearchResults,
     setSelectedDestination

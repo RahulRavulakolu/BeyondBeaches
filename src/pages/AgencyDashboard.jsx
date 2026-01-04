@@ -10,27 +10,28 @@ const AgencyDashboard = () => {
   const { currentUser, getProviderBookings, acceptBookingRequest, initiateEscrowPayment, completeTrip, loading } = useApp()
   const [activeTab, setActiveTab] = useState('requests')
   const [selectedRequest, setSelectedRequest] = useState(null)
+  const [viewTripDetails, setViewTripDetails] = useState(null)
   const [quotationAmount, setQuotationAmount] = useState('')
   const [tripProgress, setTripProgress] = useState({})
   const [showPackageModal, setShowPackageModal] = useState(false)
   const [showVehicleModal, setShowVehicleModal] = useState(false)
-  const [newPackage, setNewPackage] = useState({ 
-    name: '', 
-    destination: '', 
-    selectedPlaces: [], 
-    duration: '', 
-    basePrice: '', 
+  const [newPackage, setNewPackage] = useState({
+    name: '',
+    destination: '',
+    selectedPlaces: [],
+    duration: '',
+    basePrice: '',
     description: '',
     availableVehicles: [] // Array of vehicle IDs that can be used for this package
   })
   const [newVehicle, setNewVehicle] = useState({ type: '', model: '', ratePerKm: '', capacity: '' })
-  
+
   const allDestinations = getAllDestinations()
 
   // Get agency bookings
   const agencyBookings = getProviderBookings()
   console.log('All Agency Bookings:', agencyBookings)
-  
+
   // Categorize bookings
   const pendingRequests = agencyBookings.filter(b => b.status === 'pending_acceptance')
   const activeTrips = agencyBookings.filter(b => b.status === 'accepted')
@@ -133,11 +134,11 @@ const AgencyDashboard = () => {
 
   const handleAddPackage = () => {
     if (!newPackage.name || !newPackage.destination || newPackage.selectedPlaces.length === 0 || !newPackage.basePrice) return
-    
+
     const destination = getDestinationById(newPackage.destination)
     const totalDistance = calculateTotalDistance(newPackage.destination, newPackage.selectedPlaces)
     const placeNames = getPlaceNames(newPackage.destination, newPackage.selectedPlaces)
-    
+
     const packageToAdd = {
       id: packages.length + 1,
       name: newPackage.name,
@@ -153,14 +154,14 @@ const AgencyDashboard = () => {
       status: 'active',
       description: newPackage.description
     }
-    
+
     setPackages([...packages, packageToAdd])
-    setNewPackage({ 
-      name: '', 
-      destination: '', 
-      selectedPlaces: [], 
-      duration: '', 
-      basePrice: '', 
+    setNewPackage({
+      name: '',
+      destination: '',
+      selectedPlaces: [],
+      duration: '',
+      basePrice: '',
       description: '',
       availableVehicles: []
     })
@@ -169,7 +170,7 @@ const AgencyDashboard = () => {
 
   const handleAddVehicle = () => {
     if (!newVehicle.type || !newVehicle.model || !newVehicle.ratePerKm) return
-    
+
     const vehicleToAdd = {
       id: vehicles.length + 1,
       type: newVehicle.type,
@@ -178,7 +179,7 @@ const AgencyDashboard = () => {
       capacity: parseInt(newVehicle.capacity) || 4,
       status: 'available'
     }
-    
+
     setVehicles([...vehicles, vehicleToAdd])
     setNewVehicle({ type: '', model: '', ratePerKm: '', capacity: '' })
     setShowVehicleModal(false)
@@ -244,11 +245,10 @@ const AgencyDashboard = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                      activeTab === tab.id
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span>{tab.label}</span>
@@ -321,7 +321,7 @@ const AgencyDashboard = () => {
                           <span className="text-xs font-medium">Pending</span>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
                         <div className="flex items-center text-gray-600">
                           <Users className="w-4 h-4 mr-1" />
@@ -394,33 +394,186 @@ const AgencyDashboard = () => {
           </motion.div>
         )}
 
-        {/* Active Trips Tab - Placeholder for now */}
+        {/* Active Trips Tab */}
         {activeTab === 'active' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center"
+            className="space-y-6"
           >
-            <Navigation className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Active Trips</h3>
-            <p className="text-gray-600">
-              Track your ongoing trips here. Feature coming soon!
-            </p>
+            {activeTrips.length > 0 ? (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <Navigation className="w-5 h-5 mr-2 text-blue-500" />
+                    Active Trips ({activeTrips.length})
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Manage and track your currently ongoing trips
+                  </p>
+                </div>
+                <div className="p-6 space-y-4">
+                  {activeTrips.map((trip) => (
+                    <div key={trip.id} className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{trip.destination}</h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {trip.placeNames?.join(' → ') || 'Full destination tour'}
+                          </p>
+                        </div>
+                        <div className="flex items-center text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                          <Navigation className="w-4 h-4 mr-1" />
+                          <span className="text-xs font-medium">In Progress</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
+                        <div className="flex items-center text-gray-600">
+                          <Users className="w-4 h-4 mr-1" />
+                          {trip.people} people
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {new Date(trip.date).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {trip.duration}
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <Shield className="w-4 h-4 mr-1" />
+                          Insured
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-lg p-3 mb-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <h5 className="text-sm font-medium text-gray-700">Trip Status</h5>
+                          <span className="text-xs text-gray-500">Started on {new Date(trip.acceptedAt || Date.now()).toLocaleDateString()}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                          <div className="bg-blue-500 h-2 rounded-full" style={{ width: '45%' }}></div>
+                        </div>
+                        <p className="text-xs text-gray-500 text-right">On schedule</p>
+                      </div>
+
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={() => handleCompleteTrip(trip)}
+                          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                        >
+                          <CheckCircle className="w-4 h-4 inline mr-1" />
+                          Mark as Completed
+                        </button>
+                        <button className="flex-1 border border-blue-300 text-blue-600 py-2 px-4 rounded-lg font-medium hover:bg-blue-50 transition-colors">
+                          <Send className="w-4 h-4 inline mr-1" />
+                          Message User
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center">
+                <Navigation className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Active Trips</h3>
+                <p className="text-gray-600">
+                  Accepted trips that are currently in progress will appear here.
+                </p>
+              </div>
+            )}
           </motion.div>
         )}
 
-        {/* Completed Trips Tab - Placeholder */}
+        {/* Completed Trips Tab */}
         {activeTab === 'completed' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center"
+            className="space-y-6"
           >
-            <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Completed Trips</h3>
-            <p className="text-gray-600">
-              View your trip history and earnings. Feature coming soon!
-            </p>
+            {completedTrips.length > 0 ? (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
+                    Completed Trips ({completedTrips.length})
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    History of past trips and earnings
+                  </p>
+                </div>
+                <div className="p-6 space-y-4">
+                  {completedTrips.map((trip) => (
+                    <div key={trip.id} className="border border-green-200 rounded-lg p-4 bg-green-50">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{trip.destination}</h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {trip.placeNames?.join(' → ') || 'Full destination tour'}
+                          </p>
+                        </div>
+                        <div className="flex items-center text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          <span className="text-xs font-medium">Completed</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
+                        <div className="flex items-center text-gray-600">
+                          <Users className="w-4 h-4 mr-1" />
+                          {trip.people} people
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {new Date(trip.date).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {trip.duration}
+                        </div>
+                        <div className="flex items-center space-x-3 mt-3 col-span-2 md:col-span-4 justify-start">
+                          <button
+                            onClick={() => setViewTripDetails(trip)}
+                            className="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center"
+                          >
+                            <Star className="w-4 h-4 mr-2" />
+                            View Full Details
+                          </button>
+                        </div>
+                      </div>
+
+                      {trip.review && (
+                        <div className="bg-white rounded-lg p-3 mb-3 border border-gray-100 mt-3">
+                          <div className="flex items-center mb-2">
+                            <span className="text-sm font-medium text-gray-700 mr-2">Client Rating:</span>
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${i < (trip.rating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 italic">"{trip.review}"</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center">
+                <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Completed Trips</h3>
+                <p className="text-gray-600">
+                  View your trip history and earnings here once you complete a trip.
+                </p>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -487,18 +640,17 @@ const AgencyDashboard = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-gray-900 text-sm">₹{vehicle.ratePerKm}/km</p>
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                          vehicle.status === 'available' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${vehicle.status === 'available'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                          }`}>
                           {vehicle.status}
                         </span>
                       </div>
                     </div>
                   ))}
                 </div>
-                <button 
+                <button
                   onClick={() => setShowVehicleModal(true)}
                   className="w-full border border-primary-500 text-primary-600 py-2 rounded-lg hover:bg-primary-50"
                 >
@@ -522,7 +674,7 @@ const AgencyDashboard = () => {
                 <Package className="w-5 h-5 mr-2" />
                 Tour Packages
               </h3>
-              <button 
+              <button
                 onClick={() => setShowPackageModal(true)}
                 className="btn-primary"
               >
@@ -533,7 +685,7 @@ const AgencyDashboard = () => {
             <div className="space-y-4">
               {packages.map((pkg) => {
                 const packageVehicles = vehicles.filter(v => pkg.availableVehicles?.includes(v.id))
-                
+
                 return (
                   <div key={pkg.id} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
                     <div className="flex items-start justify-between mb-3">
@@ -555,7 +707,7 @@ const AgencyDashboard = () => {
                         <p className="text-sm text-gray-500">{pkg.bookings} bookings</p>
                       </div>
                     </div>
-                    
+
                     {/* Places Included */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
                       <p className="text-xs font-medium text-blue-900 mb-2">
@@ -582,7 +734,7 @@ const AgencyDashboard = () => {
                           <span className="font-medium text-gray-900 ml-2">{pkg.totalDistance} km</span>
                         </div>
                       </div>
-                      
+
                       {/* Vehicle Options */}
                       {packageVehicles.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-gray-200">
@@ -616,6 +768,98 @@ const AgencyDashboard = () => {
           </motion.div>
         )}
 
+        {/* Trip Details Modal */}
+        {viewTripDetails && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Trip Details</h3>
+                <button
+                  onClick={() => setViewTripDetails(null)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">{viewTripDetails.destination}</h4>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {viewTripDetails.placeNames?.map((place, index) => (
+                      <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-100">
+                        {place}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Duration</p>
+                    <p className="font-medium text-gray-900">{viewTripDetails.duration}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Travelers</p>
+                    <p className="font-medium text-gray-900">{viewTripDetails.people} People</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Start Date</p>
+                    <p className="font-medium text-gray-900">{new Date(viewTripDetails.date).toLocaleDateString()}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Completed On</p>
+                    <p className="font-medium text-gray-900">
+                      {viewTripDetails.completedAt ? new Date(viewTripDetails.completedAt).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <h5 className="font-medium text-gray-900 mb-3">Financials</h5>
+                  <div className="flex justify-between items-center bg-green-50 p-4 rounded-lg border border-green-100">
+                    <span className="text-green-800">Total Earnings (Released)</span>
+                    <span className="text-xl font-bold text-green-700">₹{viewTripDetails.escrowAmount?.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {viewTripDetails.review && (
+                  <div className="border-t border-gray-200 pt-4">
+                    <h5 className="font-medium text-gray-900 mb-3">Client Feedback</h5>
+                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                      <div className="flex items-center mb-2">
+                        <div className="flex mr-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < (viewTripDetails.rating || 5) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm font-medium text-yellow-800">{viewTripDetails.rating}/5.0</span>
+                      </div>
+                      <p className="text-gray-700 italic">"{viewTripDetails.review}"</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setViewTripDetails(null)}
+                  className="bg-gray-100 text-gray-700 py-2 px-6 rounded-lg font-medium hover:bg-gray-200"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
         {/* Quotation Modal */}
         {selectedRequest && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -628,7 +872,7 @@ const AgencyDashboard = () => {
               <p className="text-gray-600 mb-4">
                 Confirm your acceptance for this booking. ₹2,000 advance will be released immediately.
               </p>
-              
+
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
                 <h4 className="font-medium text-gray-900 mb-2">{selectedRequest.destination}</h4>
                 <div className="space-y-1 text-sm text-gray-600">
@@ -677,14 +921,14 @@ const AgencyDashboard = () => {
               className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             >
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Create Destination Package</h3>
-              
+
               <div className="space-y-4">
                 {/* Destination Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Select Destination *</label>
                   <select
                     value={newPackage.destination}
-                    onChange={(e) => setNewPackage({...newPackage, destination: e.target.value, selectedPlaces: []})}
+                    onChange={(e) => setNewPackage({ ...newPackage, destination: e.target.value, selectedPlaces: [] })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">Choose a destination</option>
@@ -708,9 +952,9 @@ const AgencyDashboard = () => {
                             checked={newPackage.selectedPlaces.includes(place.id)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setNewPackage({...newPackage, selectedPlaces: [...newPackage.selectedPlaces, place.id]})
+                                setNewPackage({ ...newPackage, selectedPlaces: [...newPackage.selectedPlaces, place.id] })
                               } else {
-                                setNewPackage({...newPackage, selectedPlaces: newPackage.selectedPlaces.filter(id => id !== place.id)})
+                                setNewPackage({ ...newPackage, selectedPlaces: newPackage.selectedPlaces.filter(id => id !== place.id) })
                               }
                             }}
                             className="mt-1"
@@ -735,7 +979,7 @@ const AgencyDashboard = () => {
                   <input
                     type="text"
                     value={newPackage.name}
-                    onChange={(e) => setNewPackage({...newPackage, name: e.target.value})}
+                    onChange={(e) => setNewPackage({ ...newPackage, name: e.target.value })}
                     placeholder="e.g., Goa Complete Beach Tour"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
@@ -746,7 +990,7 @@ const AgencyDashboard = () => {
                   <input
                     type="text"
                     value={newPackage.duration}
-                    onChange={(e) => setNewPackage({...newPackage, duration: e.target.value})}
+                    onChange={(e) => setNewPackage({ ...newPackage, duration: e.target.value })}
                     placeholder="e.g., 3 Days / 2 Nights"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
@@ -757,7 +1001,7 @@ const AgencyDashboard = () => {
                   <input
                     type="number"
                     value={newPackage.basePrice}
-                    onChange={(e) => setNewPackage({...newPackage, basePrice: e.target.value})}
+                    onChange={(e) => setNewPackage({ ...newPackage, basePrice: e.target.value })}
                     placeholder="e.g., 15000"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
@@ -778,9 +1022,9 @@ const AgencyDashboard = () => {
                             checked={newPackage.availableVehicles.includes(vehicle.id)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setNewPackage({...newPackage, availableVehicles: [...newPackage.availableVehicles, vehicle.id]})
+                                setNewPackage({ ...newPackage, availableVehicles: [...newPackage.availableVehicles, vehicle.id] })
                               } else {
-                                setNewPackage({...newPackage, availableVehicles: newPackage.availableVehicles.filter(id => id !== vehicle.id)})
+                                setNewPackage({ ...newPackage, availableVehicles: newPackage.availableVehicles.filter(id => id !== vehicle.id) })
                               }
                             }}
                           />
@@ -799,7 +1043,7 @@ const AgencyDashboard = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <textarea
                     value={newPackage.description}
-                    onChange={(e) => setNewPackage({...newPackage, description: e.target.value})}
+                    onChange={(e) => setNewPackage({ ...newPackage, description: e.target.value })}
                     placeholder="Brief description of the package"
                     rows="2"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -827,12 +1071,12 @@ const AgencyDashboard = () => {
                 <button
                   onClick={() => {
                     setShowPackageModal(false)
-                    setNewPackage({ 
-                      name: '', 
-                      destination: '', 
-                      selectedPlaces: [], 
-                      duration: '', 
-                      basePrice: '', 
+                    setNewPackage({
+                      name: '',
+                      destination: '',
+                      selectedPlaces: [],
+                      duration: '',
+                      basePrice: '',
                       description: '',
                       availableVehicles: []
                     })
@@ -855,14 +1099,14 @@ const AgencyDashboard = () => {
               className="bg-white rounded-2xl p-6 max-w-md mx-4"
             >
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Add New Vehicle</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type *</label>
                   <input
                     type="text"
                     value={newVehicle.type}
-                    onChange={(e) => setNewVehicle({...newVehicle, type: e.target.value})}
+                    onChange={(e) => setNewVehicle({ ...newVehicle, type: e.target.value })}
                     placeholder="e.g., 4-Seater Sedan"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
@@ -873,7 +1117,7 @@ const AgencyDashboard = () => {
                   <input
                     type="text"
                     value={newVehicle.model}
-                    onChange={(e) => setNewVehicle({...newVehicle, model: e.target.value})}
+                    onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
                     placeholder="e.g., Honda City"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
@@ -884,7 +1128,7 @@ const AgencyDashboard = () => {
                   <input
                     type="number"
                     value={newVehicle.ratePerKm}
-                    onChange={(e) => setNewVehicle({...newVehicle, ratePerKm: e.target.value})}
+                    onChange={(e) => setNewVehicle({ ...newVehicle, ratePerKm: e.target.value })}
                     placeholder="e.g., 12"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
@@ -896,7 +1140,7 @@ const AgencyDashboard = () => {
                   <input
                     type="number"
                     value={newVehicle.capacity}
-                    onChange={(e) => setNewVehicle({...newVehicle, capacity: e.target.value})}
+                    onChange={(e) => setNewVehicle({ ...newVehicle, capacity: e.target.value })}
                     placeholder="e.g., 4"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />

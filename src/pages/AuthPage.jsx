@@ -49,7 +49,7 @@ const AuthPage = () => {
           setError('Passwords do not match')
           return
         }
-        
+
         const userData = {
           email: formData.email,
           password: formData.password,
@@ -58,7 +58,7 @@ const AuthPage = () => {
           location: formData.location,
           type: userType
         }
-        
+
         const user = await signup(userData)
         // Navigate based on user type
         if (user.type === 'guide') {
@@ -118,11 +118,10 @@ const AuthPage = () => {
                     key={type.value}
                     type="button"
                     onClick={() => setUserType(type.value)}
-                    className={`p-3 rounded-lg border-2 transition-all text-center ${
-                      userType === type.value
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`p-3 rounded-lg border-2 transition-all text-center ${userType === type.value
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
                   >
                     <div className="text-lg mb-1">{type.icon}</div>
                     <div className="text-xs font-medium">{type.label}</div>

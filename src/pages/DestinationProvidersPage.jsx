@@ -9,7 +9,7 @@ const DestinationProvidersPage = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { getGuides, getAgencies, currentUser, createBookingRequest } = useApp()
-  
+
   const [selectedProviders, setSelectedProviders] = useState([])
   const [requestSent, setRequestSent] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -91,17 +91,17 @@ const DestinationProvidersPage = () => {
 
   const currentDestination = destinationData[destinationId]
   const selectedPlaceNames = selectedPlaceIds.map(id => placeNames[id]).filter(Boolean)
-  
+
   const allGuides = getGuides()
   const allAgencies = getAgencies()
 
   // Filter providers for this destination
-  const availableGuides = allGuides.filter(guide => 
-    currentDestination?.guides.includes(guide.id) && 
+  const availableGuides = allGuides.filter(guide =>
+    currentDestination?.guides.includes(guide.id) &&
     (guide.availability?.includes(travelDate) || !travelDate)
   )
-  
-  const availableAgencies = allAgencies.filter(agency => 
+
+  const availableAgencies = allAgencies.filter(agency =>
     currentDestination?.agencies.includes(agency.id)
   )
 
@@ -120,7 +120,7 @@ const DestinationProvidersPage = () => {
     let totalCost = 0
     let agencyCost = 0
     let guideCost = 0
-    
+
     selectedProviders.forEach(provider => {
       if (provider.type === 'guide') {
         guideCost += provider.price * tripDuration
@@ -129,10 +129,10 @@ const DestinationProvidersPage = () => {
         agencyCost += provider.packages[0]?.price || 5000
       }
     })
-    
+
     totalCost = agencyCost + guideCost
     const platformFee = Math.round(totalCost * 0.05) // 5% platform fee
-    
+
     return {
       agencyCost,
       guideCost,
@@ -147,7 +147,7 @@ const DestinationProvidersPage = () => {
     setLoading(true)
     try {
       const costBreakdown = calculateTotalCost()
-      
+
       for (const provider of selectedProviders) {
         await createBookingRequest({
           providerId: provider.id,
@@ -201,7 +201,7 @@ const DestinationProvidersPage = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Requests Sent Successfully!</h2>
           <p className="text-gray-600 mb-6">
-            Your {currentDestination.name} trip requests have been sent to {selectedProviders.length} provider{selectedProviders.length > 1 ? 's' : ''}. 
+            Your {currentDestination.name} trip requests have been sent to {selectedProviders.length} provider{selectedProviders.length > 1 ? 's' : ''}.
             They'll review your itinerary and respond soon.
           </p>
           <div className="space-y-3">
@@ -246,7 +246,7 @@ const DestinationProvidersPage = () => {
           <p className="text-xl text-gray-600 mb-4">
             Professional guides and agencies for your entire {currentDestination.name} trip
           </p>
-          
+
           {/* Trip Details */}
           <div className="flex items-center justify-center space-x-6 text-sm text-gray-500 mb-4">
             <div className="flex items-center">
@@ -294,7 +294,7 @@ const DestinationProvidersPage = () => {
               <User className="w-6 h-6 mr-2" />
               Professional Guides ({availableGuides.length})
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableGuides.map((guide, index) => (
                 <motion.div
@@ -303,10 +303,9 @@ const DestinationProvidersPage = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => handleProviderSelect(guide)}
-                  className={`bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
-                    selectedProviders.find(p => p.id === guide.id && p.type === 'guide') 
-                      ? 'ring-4 ring-primary-500 shadow-2xl' : ''
-                  }`}
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 ${selectedProviders.find(p => p.id === guide.id && p.type === 'guide')
+                    ? 'ring-4 ring-primary-500 shadow-2xl' : ''
+                    }`}
                 >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -375,7 +374,7 @@ const DestinationProvidersPage = () => {
               <Building className="w-6 h-6 mr-2" />
               Travel Agencies ({availableAgencies.length})
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {availableAgencies.map((agency, index) => (
                 <motion.div
@@ -384,10 +383,9 @@ const DestinationProvidersPage = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => handleProviderSelect(agency)}
-                  className={`bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
-                    selectedProviders.find(p => p.id === agency.id && p.type === 'agency') 
-                      ? 'ring-4 ring-primary-500 shadow-2xl' : ''
-                  }`}
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 ${selectedProviders.find(p => p.id === agency.id && p.type === 'agency')
+                    ? 'ring-4 ring-primary-500 shadow-2xl' : ''
+                    }`}
                 >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -456,7 +454,7 @@ const DestinationProvidersPage = () => {
               <Shield className="w-5 h-5 mr-2" />
               Trip Cost Breakdown
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 {costBreakdown.agencyCost > 0 && (
@@ -482,7 +480,7 @@ const DestinationProvidersPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-blue-50 rounded-lg p-4">
                 <h4 className="font-medium text-blue-900 mb-2">Escrow Payment Protection</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
@@ -523,11 +521,10 @@ const DestinationProvidersPage = () => {
           <button
             onClick={handleSendRequests}
             disabled={selectedProviders.length === 0 || loading}
-            className={`inline-flex items-center px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 ${
-              selectedProviders.length > 0 && !loading
-                ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`inline-flex items-center px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 ${selectedProviders.length > 0 && !loading
+              ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
           >
             {loading ? (
               <div className="flex items-center">

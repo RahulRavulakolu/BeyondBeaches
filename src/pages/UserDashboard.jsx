@@ -9,12 +9,13 @@ const UserDashboard = () => {
   const { currentUser, getUserBookings, initiateEscrowPayment, completeTrip, loading, getProviderById } = useApp()
   const [activeTab, setActiveTab] = useState('all-requests')
   const [selectedRequest, setSelectedRequest] = useState(null)
+  const [viewTripDetails, setViewTripDetails] = useState(null)
   const [paymentAmount, setPaymentAmount] = useState('')
   const [rating, setRating] = useState(5)
   const [review, setReview] = useState('')
 
   const userBookings = getUserBookings()
-  
+
   // Categorize bookings by status
   const pendingRequests = userBookings.filter(b => b.status === 'pending_acceptance')
   const acceptedRequests = userBookings.filter(b => b.status === 'accepted')
@@ -127,11 +128,10 @@ const UserDashboard = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                      activeTab === tab.id
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
                         ? 'border-primary-500 text-primary-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span>{tab.label}</span>
@@ -349,7 +349,7 @@ const UserDashboard = () => {
                             </span>
                           </div>
                         </div>
-                    </div>
+                      </div>
                     )
                   })}
                 </div>
@@ -431,7 +431,7 @@ const UserDashboard = () => {
                         <p className="text-xs text-blue-700 font-medium">
                           💰 Payment initiated on {new Date(trip.escrowInitiatedAt).toLocaleDateString()}
                         </p>
-                    </div>
+                      </div>
                     )
                   })}
                 </div>
@@ -496,13 +496,19 @@ const UserDashboard = () => {
                             <CheckCircle className="w-4 h-4 mr-1" />
                             Completed {new Date(trip.completedAt).toLocaleDateString()}
                           </div>
+                          <button
+                            onClick={() => setViewTripDetails(trip)}
+                            className="bg-gray-100/50 text-gray-600 hover:text-purple-600 px-3 py-1 rounded-md text-xs font-medium border border-gray-200 hover:border-purple-200 transition-colors"
+                          >
+                            View Details
+                          </button>
                         </div>
                         {trip.review && (
                           <p className="text-sm text-gray-700 bg-white rounded p-2 mt-2">
                             "{trip.review}"
                           </p>
                         )}
-                    </div>
+                      </div>
                     )
                   })}
                 </div>
@@ -603,7 +609,7 @@ const UserDashboard = () => {
               <p className="text-gray-600 mb-4">
                 Rate your experience and release the escrow payment to the provider.
               </p>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
                 <div className="flex space-x-1">
@@ -643,6 +649,104 @@ const UserDashboard = () => {
                   className="flex-1 border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
                   Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Trip Details Modal */}
+        {viewTripDetails && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Trip Details</h3>
+                  <p className="text-sm text-gray-500">Trip ID: #{viewTripDetails.id}</p>
+                </div>
+                <button
+                  onClick={() => setViewTripDetails(null)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                  <h4 className="text-lg font-medium text-purple-900 mb-2">{viewTripDetails.destination}</h4>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {viewTripDetails.placeNames?.map((place, index) => (
+                      <span key={index} className="px-2 py-1 bg-white text-purple-700 text-xs rounded-full border border-purple-100 shadow-sm">
+                        {place}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-purple-700">
+                    Provider: <span className="font-semibold">{getProviderById(viewTripDetails.providerId, viewTripDetails.providerType)?.name}</span>
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Duration</p>
+                    <p className="font-medium text-gray-900">{viewTripDetails.duration}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Travelers</p>
+                    <p className="font-medium text-gray-900">{viewTripDetails.people} People</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Start Date</p>
+                    <p className="font-medium text-gray-900">{new Date(viewTripDetails.date).toLocaleDateString()}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Completed On</p>
+                    <p className="font-medium text-gray-900">
+                      {viewTripDetails.completedAt ? new Date(viewTripDetails.completedAt).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <h5 className="font-medium text-gray-900 mb-3">Payment Summary</h5>
+                  <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                    <span className="text-gray-700">Total Paid</span>
+                    <span className="text-xl font-bold text-gray-900">₹{viewTripDetails.escrowAmount?.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {viewTripDetails.review && (
+                  <div className="border-t border-gray-200 pt-4">
+                    <h5 className="font-medium text-gray-900 mb-3">Your Review</h5>
+                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                      <div className="flex items-center mb-2">
+                        <div className="flex mr-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < (viewTripDetails.rating || 5) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm font-medium text-yellow-800">{viewTripDetails.rating}/5.0</span>
+                      </div>
+                      <p className="text-gray-700 italic">"{viewTripDetails.review}"</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setViewTripDetails(null)}
+                  className="bg-gray-100 text-gray-700 py-2 px-6 rounded-lg font-medium hover:bg-gray-200"
+                >
+                  Close
                 </button>
               </div>
             </motion.div>
