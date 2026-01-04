@@ -17,7 +17,7 @@ services:
 
   - type: web
     name: beyond-beaches-frontend
-    env: node
+    env: static
     buildCommand: cd src && npm install && npm run build
     staticPublishPath: "./dist"
     envVars:
