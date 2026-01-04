@@ -2,10 +2,8 @@ services:
   - type: web
     name: beyond-beaches-backend
     env: node
-    build:
-      command: cd backend && npm install
-    start:
-      command: cd backend && npm start
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,8 +18,7 @@ services:
   - type: web
     name: beyond-beaches-frontend
     env: node
-    build:
-      command: cd src && npm install && npm run build
+    buildCommand: cd src && npm install && npm run build
     staticPublishPath: "./dist"
     envVars:
       - key: VITE_API_BASE_URL
