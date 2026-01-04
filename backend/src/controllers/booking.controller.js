@@ -56,12 +56,15 @@ export const getBooking = catchAsync(async (req, res, next) => {
 });
 
 export const createBooking = catchAsync(async (req, res, next) => {
+  // Get the io instance from the app
+  const io = req.app.get('io');
+  
   // Allow nested routes
   if (!req.body.trip) req.body.trip = req.params.tripId;
   if (!req.body.user) req.body.user = req.user.id;
 
   // 1) Check if the trip exists
-  const trip = await Trip.findById(req.body.trip);
+  const trip = await Trip.findById(req.body.trip).populate('createdBy');
   if (!trip) {
     return next(new AppError('No trip found with that ID', 404));
   }
@@ -93,6 +96,14 @@ export const createBooking = catchAsync(async (req, res, next) => {
 
   // 5) Populate the booking with trip and user data
   await newBooking.populate('trip').populate('user').execPopulate();
+
+  // 6) Emit real-time update to the agency's room
+  if (trip.createdBy) {
+    io.to(`agency_${trip.createdBy._id}`).emit('newBooking', {
+      booking: newBooking,
+      message: 'New booking request received'
+    });
+  }
 
   res.status(201).json({
     status: 'success',

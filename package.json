@@ -5,10 +5,14 @@
   "type": "module",
   "description": "A comprehensive travel platform connecting travelers with local guides and agencies",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "start": "vite preview --host 0.0.0.0 --port $PORT",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
+    "dev:frontend": "cd src && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build:frontend": "cd src && npm install && npm run build",
+    "build:backend": "cd backend && npm install",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd src && npm start",
+    "deploy:frontend": "npm run build:frontend && npm run start:frontend",
+    "deploy:backend": "npm run build:backend && npm run start:backend"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",

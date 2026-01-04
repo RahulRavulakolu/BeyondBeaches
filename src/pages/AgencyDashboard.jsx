@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Building, Car, Package, DollarSign, Users, MapPin, Plus, Edit, Bell, CheckCircle, XCircle, Clock, AlertCircle, Play, MapPinned, Navigation, Star, Shield, Send, ChevronDown } from 'lucide-react'
+import { Building, Car, Package, DollarSign, Users, MapPin, Plus, Edit, Bell, CheckCircle, XCircle, Clock, AlertCircle, Play, MapPinned, Navigation, Star, Shield, Send, ChevronDown, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { getAllDestinations, getDestinationById, calculateTotalDistance, getPlaceNames } from '../data/destinationsData'
+import { useSocket } from '../hooks/useSocket'
 
 const AgencyDashboard = () => {
   const navigate = useNavigate()
@@ -43,6 +44,61 @@ const AgencyDashboard = () => {
     { label: 'Completed', value: completedTrips.length, icon: CheckCircle, color: 'text-green-600' },
     { label: 'Total Revenue', value: `₹${(completedTrips.reduce((sum, t) => sum + (t.escrowAmount || 0), 0)).toLocaleString()}`, icon: DollarSign, color: 'text-purple-600' }
   ]
+
+  // State for real-time notifications
+  const [notifications, setNotifications] = useState([])
+  const [showNotification, setShowNotification] = useState(false)
+  const [newBooking, setNewBooking] = useState(null)
+
+  // Initialize WebSocket connection
+  const { socket } = useSocket(currentUser, useCallback((data) => {
+    console.log('New booking received:', data)
+    setNewBooking(data.booking)
+    setShowNotification(true)
+    
+    // Auto-hide notification after 10 seconds
+    const timer = setTimeout(() => {
+      setShowNotification(false)
+    }, 10000)
+    
+    // Add to notifications list
+    setNotifications(prev => [
+      {
+        id: Date.now(),
+        message: 'New booking request received!',
+        booking: data.booking,
+        timestamp: new Date(),
+        read: false
+      },
+      ...prev
+    ].slice(0, 20)) // Keep only the 20 most recent notifications
+    
+    return () => clearTimeout(timer)
+  }, []))
+
+  const handleViewBooking = (booking) => {
+    setSelectedRequest(booking)
+    setShowNotification(false)
+    setActiveTab('requests')
+    // Scroll to booking details
+    setTimeout(() => {
+      const element = document.getElementById(`booking-${booking._id}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // Add highlight effect
+        element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2')
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2')
+        }, 3000)
+      }
+    }, 100)
+  }
+
+  const markAsRead = (id) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    )
+  }
 
   const [packages, setPackages] = useState([
     {

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: beyond-beaches-backend
+    env: node
+    root: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromDatabase:
+          name: beyond-beaches-db
+          property: connectionString
+      - key: FRONTEND_URL
+        value: https://beyond-beaches.onrender.com
+
+  - type: web
+    name: beyond-beaches-frontend
+    env: node
+    root: src
+    buildCommand: npm install && npm run build
+    staticPublishPath: "./dist"
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://beyond-beaches-backend.onrender.com
+      - key: VITE_WS_URL
+        value: wss://beyond-beaches-backend.onrender.com
