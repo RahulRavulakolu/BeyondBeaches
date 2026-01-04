@@ -2,9 +2,10 @@ services:
   - type: web
     name: beyond-beaches-backend
     env: node
-    root: backend
-    buildCommand: npm install
-    startCommand: npm start
+    build:
+      command: cd backend && npm install
+    start:
+      command: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -14,12 +15,13 @@ services:
           property: connectionString
       - key: FRONTEND_URL
         value: https://beyond-beaches.onrender.com
+    healthCheckPath: /api/v1/health
 
   - type: web
     name: beyond-beaches-frontend
     env: node
-    root: src
-    buildCommand: npm install && npm run build
+    build:
+      command: cd src && npm install && npm run build
     staticPublishPath: "./dist"
     envVars:
       - key: VITE_API_BASE_URL
